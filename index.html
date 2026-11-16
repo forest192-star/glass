@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 안경 부정활용 실태 및 해외 대응사례 종합 보고서</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #0f172a;
+  --accent: #3b82f6;
+  --accent2: #8b5cf6;
+  --accent3: #06b6d4;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --surface: #f8fafc;
+  --text: #1e293b;
+  --muted: #64748b;
+  --slide-w: 100vw;
+  --slide-h: 100vh;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #000;
+  color: var(--text);
+}
+
+/* ─── Slide Container ─── */
+#deck {
+  position: relative;
+  width: var(--slide-w); height: var(--slide-h);
+}
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  transform: translateX(40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+.slide::-webkit-scrollbar { width: 6px; }
+.slide::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+.slide.active {
+  opacity: 1; visibility: visible; transform: translateX(0);
+}
+.slide.prev {
+  opacity: 0; visibility: hidden; transform: translateX(-40px);
+}
+
+/* ─── Slide Layouts ─── */
+.slide-content {
+  flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 60px 80px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Title slide */
+.layout-title {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0c4a6e 100%);
+  color: #fff;
+  justify-content: center; align-items: center; text-align: center;
+  position: relative;
+}
+.layout-title::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.15) 0%, transparent 70%),
+              radial-gradient(ellipse at 70% 80%, rgba(139,92,246,0.1) 0%, transparent 60%);
+}
+.layout-title .slide-content { position: relative; z-index: 1; align-items: center; }
+.layout-title h1 { font-size: 3.2rem; font-weight: 900; line-height: 1.3; letter-spacing: -1px; margin-bottom: 24px; }
+.layout-title h1 span { background: linear-gradient(90deg, #60a5fa, #a78bfa, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.layout-title .subtitle { font-size: 1.25rem; color: rgba(255,255,255,0.7); font-weight: 300; line-height: 1.8; }
+.layout-title .date { margin-top: 40px; font-size: 1rem; color: rgba(255,255,255,0.4); }
+
+/* Section divider */
+.layout-section {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #fff; text-align: center;
+}
+.layout-section .slide-content { align-items: center; }
+.layout-section .section-num { font-size: 1rem; text-transform: uppercase; letter-spacing: 4px; color: var(--accent); margin-bottom: 16px; font-weight: 700; }
+.layout-section h2 { font-size: 2.8rem; font-weight: 900; line-height: 1.3; }
+.layout-section .section-desc { margin-top: 20px; font-size: 1.1rem; color: rgba(255,255,255,0.5); max-width: 700px; line-height: 1.7; }
+
+/* Content slides */
+.layout-content { background: var(--surface); }
+.layout-content .slide-content { justify-content: flex-start; padding-top: 50px; }
+.slide-header { margin-bottom: 36px; }
+.slide-header .chapter { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 3px; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+.slide-header h3 { font-size: 2rem; font-weight: 900; color: var(--primary); line-height: 1.3; }
+
+/* Dark content */
+.layout-dark { background: linear-gradient(180deg, #0f172a 0%, #1a2744 100%); color: #e2e8f0; }
+.layout-dark .slide-header .chapter { color: #60a5fa; }
+.layout-dark .slide-header h3 { color: #f1f5f9; }
+
+/* ─── Components ─── */
+
+/* Case card */
+.case-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  border-left: 5px solid var(--accent);
+  transition: transform 0.2s;
+}
+.case-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.case-card.danger { border-left-color: var(--danger); }
+.case-card.warning { border-left-color: var(--warning); }
+.case-card.purple { border-left-color: var(--accent2); }
+.case-card.cyan { border-left-color: var(--accent3); }
+.case-card h4 { font-size: 1.15rem; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.case-card h4 .badge { font-size: 0.7rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; color: #fff; flex-shrink: 0; }
+.badge-red { background: var(--danger); }
+.badge-blue { background: var(--accent); }
+.badge-purple { background: var(--accent2); }
+.badge-yellow { background: var(--warning); color: #000 !important; }
+.badge-cyan { background: var(--accent3); }
+.badge-green { background: var(--success); }
+.case-card p { font-size: 0.88rem; line-height: 1.75; color: #475569; }
+.case-card .meta { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 10px; }
+.case-card .meta span { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+.case-card .meta span::before { margin-right: 4px; }
+
+/* Dark case card */
+.layout-dark .case-card { background: rgba(255,255,255,0.06); border-color: rgba(96,165,250,0.4); box-shadow: 0 2px 12px rgba(0,0,0,0.2); }
+.layout-dark .case-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+.layout-dark .case-card h4 { color: #f1f5f9; }
+.layout-dark .case-card p { color: #94a3b8; }
+.layout-dark .case-card.danger { border-color: rgba(239,68,68,0.5); }
+.layout-dark .case-card.purple { border-color: rgba(139,92,246,0.5); }
+.layout-dark .case-card.cyan { border-color: rgba(6,182,212,0.5); }
+
+/* Stat row */
+.stats-row { display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap; }
+.stat-box {
+  flex: 1; min-width: 180px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(139,92,246,0.06));
+  border: 1px solid rgba(59,130,246,0.15);
+  border-radius: 14px; padding: 22px 24px; text-align: center;
+}
+.stat-box .stat-val { font-size: 2rem; font-weight: 900; color: var(--accent); }
+.stat-box .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 6px; font-weight: 500; }
+
+.layout-dark .stat-box { background: rgba(59,130,246,0.1); border-color: rgba(59,130,246,0.2); }
+.layout-dark .stat-box .stat-val { color: #60a5fa; }
+.layout-dark .stat-box .stat-label { color: #94a3b8; }
+
+/* Table */
+.slide-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin: 16px 0; }
+.slide-table th { background: var(--primary); color: #fff; padding: 12px 14px; text-align: left; font-weight: 600; white-space: nowrap; }
+.slide-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; line-height: 1.6; color: #334155; }
+.slide-table tr:nth-child(even) td { background: rgba(59,130,246,0.03); }
+.slide-table tr:hover td { background: rgba(59,130,246,0.06); }
+
+.layout-dark .slide-table th { background: rgba(59,130,246,0.25); }
+.layout-dark .slide-table td { border-bottom-color: rgba(255,255,255,0.06); color: #cbd5e1; }
+.layout-dark .slide-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+/* Grid layout */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* Icon box */
+.icon-box {
+  background: #fff; border-radius: 14px; padding: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  text-align: center;
+}
+.icon-box .icon { font-size: 2.4rem; margin-bottom: 12px; }
+.icon-box h5 { font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+.icon-box p { font-size: 0.78rem; color: var(--muted); line-height: 1.6; }
+
+.layout-dark .icon-box { background: rgba(255,255,255,0.05); }
+.layout-dark .icon-box h5 { color: #f1f5f9; }
+.layout-dark .icon-box p { color: #94a3b8; }
+
+/* Timeline */
+.timeline { position: relative; padding-left: 30px; }
+.timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 1px; }
+.tl-item { position: relative; margin-bottom: 22px; }
+.tl-item::before { content: ''; position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.tl-item h5 { font-size: 0.9rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+.tl-item p { font-size: 0.82rem; color: #475569; line-height: 1.65; }
+
+.layout-dark .timeline::before { background: linear-gradient(180deg, #60a5fa, #a78bfa); }
+.layout-dark .tl-item::before { background: #60a5fa; border-color: #1a2744; }
+.layout-dark .tl-item h5 { color: #f1f5f9; }
+.layout-dark .tl-item p { color: #94a3b8; }
+
+/* bullet list */
+.bullet-list { list-style: none; padding: 0; }
+.bullet-list li { position: relative; padding-left: 24px; margin-bottom: 14px; font-size: 0.9rem; line-height: 1.7; color: #475569; }
+.bullet-list li::before { content: '▸'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+.layout-dark .bullet-list li { color: #94a3b8; }
+.layout-dark .bullet-list li::before { color: #60a5fa; }
+
+/* Highlight box */
+.highlight-box {
+  background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(245,158,11,0.06));
+  border: 1px solid rgba(239,68,68,0.15);
+  border-radius: 14px; padding: 24px 28px; margin: 16px 0;
+}
+.highlight-box.blue { background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(6,182,212,0.06)); border-color: rgba(59,130,246,0.15); }
+.highlight-box h5 { font-size: 1rem; font-weight: 700; color: var(--danger); margin-bottom: 10px; }
+.highlight-box.blue h5 { color: var(--accent); }
+.highlight-box p, .highlight-box li { font-size: 0.85rem; color: #475569; line-height: 1.7; }
+
+.layout-dark .highlight-box { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+.layout-dark .highlight-box.blue { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); }
+.layout-dark .highlight-box p, .layout-dark .highlight-box li { color: #94a3b8; }
+
+/* ─── Progress Bar ─── */
+#progress {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 100;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  transition: width 0.4s ease;
+}
+
+/* ─── Navigation ─── */
+#nav-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 28px; gap: 16px;
+}
+#nav-bar button {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e2e8f0; border-radius: 8px;
+  padding: 8px 18px; cursor: pointer; font-size: 0.85rem; font-weight: 500;
+  transition: all 0.2s;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+#nav-bar button:hover { background: rgba(59,130,246,0.3); border-color: rgba(59,130,246,0.4); }
+#nav-bar button:disabled { opacity: 0.3; cursor: not-allowed; }
+#nav-bar .page-info { color: rgba(255,255,255,0.5); font-size: 0.8rem; font-weight: 500; }
+#nav-bar .fs-btn { background: rgba(59,130,246,0.2); border-color: rgba(59,130,246,0.3); }
+
+/* ─── Slide Overview (minimap) ─── */
+#overview {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(8px);
+  display: none; /* toggled via JS */
+  overflow-y: auto;
+  padding: 40px;
+}
+#overview.show { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; align-content: flex-start; }
+.overview-thumb {
+  width: 240px; height: 135px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: #1e293b;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; color: rgba(255,255,255,0.6);
+  text-align: center; padding: 12px;
+  transition: all 0.2s;
+  line-height: 1.4;
+}
+.overview-thumb:hover { border-color: var(--accent); transform: scale(1.05); }
+.overview-thumb.current { border-color: var(--accent); background: rgba(59,130,246,0.15); }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .slide-content { padding: 30px 24px; }
+  .layout-title h1 { font-size: 2rem; }
+  .layout-section h2 { font-size: 2rem; }
+  .slide-header h3 { font-size: 1.5rem; }
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .stats-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SLIDE 1: Title -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="deck">
+
+<div class="slide layout-title active" data-title="표지">
+  <div class="slide-content">
+    <h1><span>AI 안경 부정활용</span> 실태 및<br>해외 대응사례 종합 보고서</h1>
+    <p class="subtitle">스마트 글래스 악용 사례 · 해외 정부 대응 정책 · 장비 유통 가격 조사</p>
+    <p class="date">2026년 11월 16일</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 2: TOC ═══════ -->
+<div class="slide layout-dark" data-title="목차">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Overview</div>
+      <h3>발표 목차</h3>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="case-card">
+          <h4><span class="badge badge-blue">제1장</span> 보고서 개요 및 배경</h4>
+          <p>AI 안경의 급속한 진화와 부정활용 위협 환경 분석</p>
+        </div>
+        <div class="case-card danger">
+          <h4><span class="badge badge-red">제2장</span> 해외 AI 안경 부정활용 사례</h4>
+          <p>시험 치팅, 카지노·체스, 사생활 침해, 기밀 유출 등 4대 분야 11개 구체 사례</p>
+        </div>
+      </div>
+      <div>
+        <div class="case-card purple">
+          <h4><span class="badge badge-purple">제3장</span> 해외 정부의 대응사례</h4>
+          <p>주요국 법적 처벌, 첨단 단속 기술, 국제 가이드라인</p>
+        </div>
+        <div class="case-card cyan">
+          <h4><span class="badge badge-cyan">제4장</span> 장비 유통 및 가격 조사</h4>
+          <p>공식 AI 안경 7종 + 치팅 장비 6종 가격 비교 및 접근성 평가</p>
+        </div>
+        <div class="case-card">
+          <h4><span class="badge badge-green">제5장</span> 종합 분석 및 시사점</h4>
+          <p>세대별 진화, 형사범죄화 추세, 구조적 난제, 향후 대응 방향</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 3: Section 1 Intro ═══════ -->
+<div class="slide layout-section" data-title="제1장 개요">
+  <div class="slide-content">
+    <div class="section-num">Chapter 01</div>
+    <h2>보고서 개요 및 배경</h2>
+    <p class="section-desc">스마트 글래스가 일상 편의 도구를 넘어 범죄 및 부정행위 수단으로 악용되는 위협 환경을 분석합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 4: Background ═══════ -->
+<div class="slide layout-dark" data-title="기술 환경 변화">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 01</div>
+      <h3>스마트 글래스 기술 환경의 급변</h3>
+    </div>
+    <div class="grid-3">
+      <div class="icon-box"><div class="icon">📷</div><h5>초소형 카메라</h5><p>12MP 울트라와이드 카메라가 안경 프레임에 내장. 1080p 60fps 실시간 촬영 가능</p></div>
+      <div class="icon-box"><div class="icon">🤖</div><h5>멀티모달 생성형 AI</h5><p>GPT-4o, Gemini 등이 실시간으로 이미지를 분석하고 텍스트/음성으로 답변 생성</p></div>
+      <div class="icon-box"><div class="icon">👓</div><h5>AR HUD 디스플레이</h5><p>렌즈 내부 도파관에 텍스트 투사. 외부에서는 일반 안경과 100% 동일하게 보임</p></div>
+      <div class="icon-box"><div class="icon">🔊</div><h5>지향성 오디오</h5><p>오픈이어/골전도 스피커로 착용자에게만 은밀하게 음성 전달</p></div>
+      <div class="icon-box"><div class="icon">⚖️</div><h5>경량화·슬림화</h5><p>38~40g 초경량. 일반 뿔테 안경과 육안 구분 사실상 불가능</p></div>
+      <div class="icon-box"><div class="icon">📡</div><h5>상시 연결성</h5><p>블루투스/Wi-Fi/4G LTE로 클라우드 AI에 실시간 연결, 외부 조력자 불필요</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 5: Section 2 Intro ═══════ -->
+<div class="slide layout-section" data-title="제2장 부정활용 사례">
+  <div class="slide-content">
+    <div class="section-num">Chapter 02</div>
+    <h2>해외 AI 안경 부정활용 사례</h2>
+    <p class="section-desc">시험 치팅, 카지노·체스, 사생활 침해·도촬, 기밀 유출·면접 부정행위 등 4대 분야의 11개 구체 사례를 분석합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 6: Exam Cases ═══════ -->
+<div class="slide layout-content" data-title="시험 부정행위 사례">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 02 – 시험 부정행위</div>
+      <h3>대학·입시 시험 AI 안경 부정행위 사례</h3>
+    </div>
+    <div class="case-card danger">
+      <h4><span class="badge badge-red">2016</span> 태국 랑싯 대학교 의대 입시 스파이 안경 사건</h4>
+      <div class="meta"><span>📍 태국 파툼타니주</span><span>🎓 의·치·약대 입학시험</span><span>💰 합격 보장 대가: 약 3,000만 원/인</span></div>
+      <p>브로커 조직이 대리 응시생 3명에게 핀홀 카메라 내장 스파이 안경을 착용시켜 시험지를 촬영·녹화하고, 외부 강사진이 풀이 후 스마트워치로 정답 전송. 감독관이 안경테의 이상을 발견하여 적발. <strong>응시생 3,000여 명 시험 전면 무효화</strong>, 가담자 영구 입학 취소 및 형사 송치.</p>
+    </div>
+    <div class="case-card danger">
+      <h4><span class="badge badge-red">2026</span> 인도 벵갈루루 마운트 카멜 대학교 스마트 글래스 치팅</h4>
+      <div class="meta"><span>📍 인도 카르나타카주</span><span>👓 약 55만 원 상당 상용 스마트 안경</span></div>
+      <p>골전도 스피커·블루투스 모듈 내장 스마트 안경을 착용하고 외부 조력자로부터 실시간 정답 음성 수신. 감독관이 안경을 벗겨 직접 착용 후 외부 음성을 청취하여 현장 적발. <strong>1학기 전 과목 시험 자격 영구 박탈.</strong></p>
+    </div>
+    <div class="case-card danger">
+      <h4><span class="badge badge-red">2024</span> 튀르키예 대입수능(YKS) — GPT-4o 결합 웨어러블 <strong>세계 최초 구속 사례</strong></h4>
+      <div class="meta"><span>📍 튀르키예 이스파르타주</span><span>🤖 GPT-4o + 단추 카메라 + 신발 밑창 라우터 + 귓속 이어폰</span></div>
+      <p>단추형 카메라로 시험지 실시간 촬영 → 신발 밑창 은닉 라우터 → GPT-4o가 문제 풀이 → 귓속 이어폰으로 정답 음성 전달. <strong>국가 공인 대입 시험에서 생성형 AI와 웨어러블을 결합해 사법처리된 세계 최초의 구속 사례.</strong> 전 세계 외신에 대대적 보도.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 7: Gambling/Sports ═══════ -->
+<div class="slide layout-content" data-title="카지노·스포츠 부정행위">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 02 – 게임·스포츠</div>
+      <h3>카지노·도박 및 체스 부정행위 사례</h3>
+    </div>
+    <div class="case-card warning">
+      <h4><span class="badge badge-yellow">2011</span> 프랑스 칸 카지노 적외선 스마트 안경 사기단</h4>
+      <div class="meta"><span>📍 프랑스 칸 Casino Les Princes</span><span>💰 64,000유로(약 9,500만 원) 부당이득</span></div>
+      <p>적외선(IR) 필터 특수 코팅 선글라스로 비가시 잉크 마킹 카드를 투시. 스터드 포커 44판 중 34판 승리(통계적 불가능). 프랑스 사법경찰에 의해 검거. <strong>징역형 + 10만 유로 이상 벌금.</strong> 전 세계 카지노가 IR/UV 감지 센서 및 스마트 안경 금지 규정 도입.</p>
+    </div>
+    <div class="case-card warning">
+      <h4><span class="badge badge-yellow">2025</span> 미국 마피아 연계 불법 도박 링 — 31명 연방 기소</h4>
+      <div class="meta"><span>📍 미국 뉴욕·네바다·캘리포니아</span><span>👤 전직 NBA 스타 포함</span></div>
+      <p>뉴욕 마피아와 스포츠계 인사가 결탁. 특수 광학 선글라스/콘택트렌즈로 카드 뒷면 표식 판독, 수백만 달러 갈취. FBI·DOJ 합동 수사로 일망타진. <strong>총 31명 전격 기소.</strong></p>
+    </div>
+    <div class="case-card warning">
+      <h4><span class="badge badge-yellow">2024</span> 체스계 Ray-Ban Meta + Stockfish 엔진 치팅 시연</h4>
+      <div class="meta"><span>🤖 Ray-Ban Meta + 컴퓨터 비전 + Stockfish</span><span>👤 17세 개발자 Eddy Xu</span></div>
+      <p>안경 카메라가 체스판 인식 → FEN 변환 → Stockfish 엔진이 최적수 계산 → 지향성 스피커로 전달. FIDE가 <strong>Anti-Cheating Regulations 대폭 강화</strong>, 일반 안경까지 심판이 물리 전수 검사하도록 규정 명문화.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 8: Privacy ═══════ -->
+<div class="slide layout-content" data-title="사생활 침해·도촬">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 02 – 프라이버시</div>
+      <h3>사생활 침해, 불법 도촬 및 신원 조회(Doxxing)</h3>
+    </div>
+    <div class="case-card purple">
+      <h4><span class="badge badge-purple">2024</span> 하버드생 'I-XRAY' 실시간 안면인식 독싱 프로젝트</h4>
+      <div class="meta"><span>📍 보스턴 지하철·하버드 캠퍼스</span><span>👓 Ray-Ban Meta + PimEyes + LLM</span></div>
+      <p>안경으로 거리를 걸으며 인스타 라이브 스트리밍 → 행인 얼굴 자동 캡처 → 안면 역추적 AI(PimEyes)로 신상 수집 → LLM이 공공 DB와 대조 → <strong>단 10초 만에 낯선 행인의 이름·주소·전화번호·가족관계 파악.</strong> 영상 수천만 회 조회, 전 세계적 프라이버시 공포. FTC 및 EU GDPR 규제 검토 촉발.</p>
+    </div>
+    <div class="grid-2">
+      <div class="case-card purple">
+        <h4><span class="badge badge-purple">2024~</span> LED 무력화 키트 암시장 유통</h4>
+        <p>메타의 촬영 LED 안전장치를 우회하는 3D 프린팅 스텔스 커버(LED를 가리되 내부 센서만 통과) 및 LED 회로 물리 제거 개조 키트($60~100)가 활발히 유통. <strong>주요 피트니스 체인(Planet Fitness 등)이 스마트 글래스 전면 금지.</strong></p>
+      </div>
+      <div class="case-card purple">
+        <h4><span class="badge badge-purple">영국</span> 스마트 안경 성관계 불법 촬영 유죄 판결</h4>
+        <p>프레임에 은닉된 카메라로 동의 없이 성관계 장면을 1인칭 몰래 녹화. <strong>성범죄법 제67조(관음증) 위반 유죄, 성범죄자 등록부 등재.</strong> 영국 법원행정처는 모든 법원 건물 내 스마트 글래스 반입 법적 전면 금지.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 9: Corporate/Interviews ═══════ -->
+<div class="slide layout-content" data-title="기밀유출·면접 부정행위">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 02 – 기밀·면접</div>
+      <h3>기밀 유출, 취업 면접 및 자격증 시험 부정행위</h3>
+    </div>
+    <div class="case-card cyan">
+      <h4><span class="badge badge-cyan">2024~</span> Even Realities G1 HUD 안경 – 비대면 면접 AI 치팅</h4>
+      <div class="meta"><span>📍 실리콘밸리 테크 기업 원격 면접</span><span>👓 G1 AR 안경 + AI 인터뷰 코파일럿</span></div>
+      <p>렌즈 안쪽에만 텍스트 투사(외부 불가시) → 면접관 질문 실시간 STT → LLM이 모범 답안 생성 → 렌즈 디스플레이에 스크롤. "글을 읽는 어조" 및 동공 좌우 왕복(안구 마이크로 무브먼트)으로 적발. <strong>구글·아마존 등이 안경 360도 회전 사전 검사 절차 도입.</strong></p>
+    </div>
+    <div class="grid-2">
+      <div class="case-card cyan">
+        <h4><span class="badge badge-cyan">2023~25</span> 스페인 운전면허 시험 전문 치팅 조직</h4>
+        <p>개조 스마트 안경 카메라 + 자석형 귓속 이어폰 + 옷 속 송수신기. 브로커 조직이 1,000~4,000유로(150~600만 원)에 장비 대여. 치안대(Guardia Civil)가 RF 스캐너로 비인가 무선 신호 감지. <strong>응시자 불합격 + 과태료 + 6개월 응시 금지. 브로커 조직 징역형.</strong></p>
+      </div>
+      <div class="case-card cyan">
+        <h4><span class="badge badge-cyan">2024~</span> 반도체·하이테크 기업 스마트 안경 금지령</h4>
+        <p>애플·구글 R&D, TSMC 클린룸 등에서 스마트 글래스 반입 전면 금지. 일반 안경으로 위장 시 쳐다보는 것만으로 4K 촬영·라이브 유출 가능. <strong>시력 교정 필요 시 보안팀 지급 "표준 보안 도수 안경"만 착용 허용.</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 10: Section 3 Intro ═══════ -->
+<div class="slide layout-section" data-title="제3장 대응사례">
+  <div class="slide-content">
+    <div class="section-num">Chapter 03</div>
+    <h2>해외 정부의 AI 활용<br>치팅 대응사례</h2>
+    <p class="section-desc">주요국의 법적 처벌 규정, 첨단 단속 기술, 국제기구 가이드라인을 종합 분석합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 11: Legal Penalties ═══════ -->
+<div class="slide layout-content" data-title="주요국 법적 처벌">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 03 – 법적 처벌</div>
+      <h3>주요국 법적 처벌 규정 비교</h3>
+    </div>
+    <table class="slide-table">
+      <thead>
+        <tr><th>국가</th><th>법안 / 규정명</th><th>주요 처벌 수위</th><th>비고</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>인도</strong></td><td>공공시험 부정행위 방지법, 2024</td><td>일반: 3~5년 징역, 100만 루피 벌금<br>조직적: <strong>5~10년 징역, 1,000만 루피(~1.6억 원)</strong><br>재산 몰수</td><td>체포영장 없는 구속<br>보석·합의 불가</td></tr>
+        <tr><td><strong>중국</strong></td><td>형법 제284조의1<br>(형법수정안 9)</td><td>국가시험 조직적 부정행위: <strong>최대 7년 징역</strong><br>스파이 장비 생산·판매: 최대 7년 징역</td><td>가오카오·공무원·사법시험<br>적용</td></tr>
+        <tr><td><strong>프랑스</strong></td><td>1901년 공공시험<br>부정행위 처벌법</td><td>일반: 최대 3년 징역, 45,000유로 벌금<br>대리응시: <strong>최대 10년 징역, 100만 유로(~14.7억 원)</strong></td><td>최대 5년간 전 공공시험<br>응시 금지</td></tr>
+        <tr><td><strong>미국</strong></td><td>연방 통신사기법<br>공모죄·신분도용죄</td><td><strong>수년형 징역, 벌금, 범죄수익 몰수</strong><br>유학생: 비자 취소·강제 추방</td><td>FBI·HSI 합동 수사</td></tr>
+        <tr><td><strong>싱가포르</strong></td><td>형법 제420조/제109조</td><td>징역 최대 5년<br>Zeus 학원 사건: <strong>원장 4년, 강사 2~3년 실형</strong></td><td>페이스타임+살색 블루투스<br>인이어 치팅</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight-box">
+      <h5>🔥 글로벌 트렌드: 형사 범죄화</h5>
+      <p>단순 학칙 위반(정학/퇴학)에 그치던 시험 부정행위가 법 개정을 통해 <strong>5~10년형의 징역 및 거액의 벌금을 부과하는 조직범죄 수준의 형사사건</strong>으로 다루어지는 추세</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 12: Detection Tech ═══════ -->
+<div class="slide layout-dark" data-title="첨단 단속 기술">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 03 – 단속 기술</div>
+      <h3>시험장 첨단 단속 기술 현황</h3>
+    </div>
+    <div class="grid-2">
+      <div class="case-card">
+        <h4>🎯 AI 실시간 감시 (중국 가오카오)</h4>
+        <p>광둥성 386개 시험장 전역에 AI 지능형 시험감독 시스템 가동. 포즈 추정(Pose Estimation) 및 행동 인식으로 미세 이상 행동 실시간 탐지. 의심 패턴 시 적색 플래그 즉각 알림.</p>
+      </div>
+      <div class="case-card danger">
+        <h4>📡 전파 탐지·차단</h4>
+        <p>• 5G/4G/Wi-Fi/블루투스 전면 차폐 이동식 장비 배치 (중국)<br>• RF 모니터링 드론으로 비인가 전파 삼각측량 추적 (중국)<br>• 시험장 반경 수km 모바일 인터넷 셧다운 (인도)<br>• 빅테크 AI 문제 풀이 기능 전국 서비스 중단 (중국)</p>
+      </div>
+      <div class="case-card purple">
+        <h4>👔 신체 수색 및 복장 규제 (인도)</h4>
+        <p>• "블루투스 슬리퍼" 적발 → 개방형 샌들만 허용<br>• 반팔 티셔츠만 허용 (긴소매·금속 단추 금지)<br>• 휴대용 금속탐지기(HHMD), 전신 스캐너 의무<br>• Aadhaar 기반 지문·안면 생체인증으로 대리응시 차단</p>
+      </div>
+      <div class="case-card cyan">
+        <h4>👓 안경류 물리적 전수 검사</h4>
+        <p>• 안경 착용 수험생의 안경테를 감독관이 직접 수거하여 카메라 렌즈, 마이크 홀, 배터리 유무 정밀 검사<br>• 도수 스마트 안경 소유자는 시험 당일 일반 안경 착용 의무화<br>• 비대면 시험: 듀얼 카메라 + AI 감독 (시선추적, 타이핑 패턴, 원격제어 탐지)</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 13: Other Sectors + Guidelines ═══════ -->
+<div class="slide layout-content" data-title="국제 가이드라인">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 03 – 국제 가이드라인</div>
+      <h3>국제기구 및 교육기관 공식 가이드라인</h3>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="case-card">
+          <h4>🇪🇺 EU AI Act (2024)</h4>
+          <p>• <strong>제5조:</strong> 교육기관 내 감정 인식(Emotion Recognition) AI 전면 금지 (2025년 2월 발효)<br>• <strong>부속서 III:</strong> AI 감독 소프트웨어(AI Proctoring)를 <strong>고위험군(High-Risk)</strong>으로 지정. 의무적 인간 감독(Human-in-the-loop), 편향 배제, 사이버 보안 확보 의무</p>
+        </div>
+        <div class="case-card">
+          <h4>🇬🇧 영국 JCQ 가이드라인</h4>
+          <p>GCSE·A-Level 시험장에 AI 기능·통신 가능 웨어러블 반입 일체 금지. <strong>소지만으로 부정행위(Malpractice) 간주.</strong> Skills and Post-16 Education Act 2022으로 상업적 AI/인간 대필 서비스 운영·광고 자체를 <strong>범죄화.</strong></p>
+        </div>
+      </div>
+      <div>
+        <div class="case-card">
+          <h4>🇦🇺 호주 TEQSA + 영미권 대학</h4>
+          <p>• AI 텍스트 탐지기(Turnitin 등)의 위양성 문제로 <strong>징계의 단독 증거로 사용 불가 선언</strong><br>• 대면 구술시험(Viva Voce) 부활<br>• 과제 제출 시 초안~최종본 변경 이력 및 AI 대화 프롬프트 기록 제출 의무화</p>
+        </div>
+        <div class="case-card">
+          <h4>🎰🏟️ 카지노·스포츠 대응</h4>
+          <p>• <strong>네바다주:</strong> 예측·분석 장치 소지/사용 → C/B급 중범죄 (1~6년 징역)<br>• <strong>FIDE:</strong> 모든 전자기기 반입 금지, 중계 15~30분 지연, 통계적 이상 탐지(Ken Regan 모델)로 영구 자격정지 징계<br>• 카지노·법원·군사시설 내 스마트 글래스 반입 법적 금지</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 14: Section 4 Intro ═══════ -->
+<div class="slide layout-section" data-title="제4장 유통·가격">
+  <div class="slide-content">
+    <div class="section-num">Chapter 04</div>
+    <h2>국내외 AI 안경 및<br>치팅 장비 유통·가격 조사</h2>
+    <p class="section-desc">공식 스마트 글래스 7종과 치팅 전용 장비 6종의 가격 및 유통 현황을 비교 분석합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 15: Official Glasses ═══════ -->
+<div class="slide layout-content" data-title="공식 AI 안경 가격">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 04 – 공식 제품</div>
+      <h3>공식 스마트/AI 글래스 제품 가격 비교</h3>
+    </div>
+    <table class="slide-table">
+      <thead>
+        <tr><th>제품명</th><th>주요 특징</th><th>정가 (외화)</th><th>국내 실판매가</th><th>악용 위험도</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Ray-Ban Meta</strong><br>(2세대)</td><td>12MP 카메라, Meta AI 비전<br>멀티모달 시각 질의응답</td><td>$299~$379</td><td>직구 45~55만 원<br>국내 69~80만 원<br><strong>렌탈 일 1~2만 원</strong></td><td style="color:#ef4444;font-weight:700">매우 높음</td></tr>
+        <tr><td><strong>Even Realities G1</strong></td><td>Micro-LED HUD 디스플레이<br><strong>카메라 없음</strong>(일반 안경 100% 동일)</td><td>$599</td><td>직구 80~95만 원</td><td style="color:#dc2626;font-weight:700">극히 높음<br>(치팅 특화)</td></tr>
+        <tr><td><strong>Solos AirGo 3</strong></td><td>GPT-4o SolosChat<br>실시간 음성 AI 비서</td><td>$199~$299</td><td>30~45만 원</td><td style="color:#ef4444;font-weight:700">높음</td></tr>
+        <tr><td><strong>Brilliant Labs Frame</strong></td><td>Micro-OLED HUD + 720p 카메라<br>멀티모달 Noa AI</td><td>$349~$399</td><td>직구 50~60만 원</td><td style="color:#ef4444;font-weight:700">매우 높음</td></tr>
+        <tr><td><strong>Rokid Glasses</strong></td><td>12MP 카메라, 38.5g 초경량<br>ChatGPT/Gemini 듀얼 AI</td><td>$499~$599</td><td>75~90만 원</td><td style="color:#ef4444;font-weight:700">매우 높음</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 16: Cheating Devices ═══════ -->
+<div class="slide layout-dark" data-title="치팅 장비 가격">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 04 – 치팅 전용 장비</div>
+      <h3>부정행위·스파이 전용 초소형 장비 가격 비교</h3>
+    </div>
+    <table class="slide-table">
+      <thead>
+        <tr><th>장비 분류</th><th>위장 형태</th><th>해외 직구가</th><th>국내가</th><th>악용 수법</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>안경형 몰래카메라</strong></td><td>1mm 핀홀 렌즈, 1080P<br>LED 없음</td><td style="color:#f59e0b;font-weight:700">$15~$50<br>(2~7만 원)</td><td>25~45만 원</td><td>시험지 정면 응시<br>자동 촬영</td></tr>
+        <tr><td><strong>단추형 Wi-Fi/4G 카메라</strong></td><td>셔츠 단추 모양<br>실시간 스트리밍</td><td style="color:#f59e0b;font-weight:700">$20~$350<br>(2.7~48만 원)</td><td>15~150만 원</td><td>외부 브로커에게<br>시험지 실시간 송출</td></tr>
+        <tr><td><strong>초소형 자석 귓속 이어폰</strong></td><td>1.5~3mm 네오디뮴<br>육안 식별 불가</td><td style="color:#f59e0b;font-weight:700">$10~$35<br>(1.4~5만 원)</td><td>2~6만 원</td><td>외부 음성 정답을<br>흔적 없이 청취</td></tr>
+        <tr><td><strong>GSM 넥루프 송신기</strong></td><td>구리선 목걸이(옷 속)<br>자체 SIM 카드 슬롯</td><td style="color:#f59e0b;font-weight:700">$25~$120</td><td>15~35만 원</td><td>스마트폰 없이<br>무선 음성 통화</td></tr>
+        <tr><td><strong>원격 올인원 치팅 킷</strong></td><td>4G 카메라+넥루프<br>+이어폰+SW 풀세트</td><td style="color:#ef4444;font-weight:700">$300~$800<br>(40~110만 원)</td><td>브로커 연계<br>수백만~1천만 원</td><td>카메라→AI/브로커<br>→이어폰 정답 전달</td></tr>
+      </tbody>
+    </table>
+    <div class="highlight-box" style="margin-top:20px">
+      <h5>⚠️ 핵심 문제: 극도로 낮은 진입장벽</h5>
+      <p>알리익스프레스에서 <strong>단돈 1~3만 원</strong>이면 자석 이어폰+넥루프를 누구나 구매 가능. AI 안경도 렌탈로 <strong>1일 1~2만 원</strong>에 이용 가능. 과거 수백만 원의 브로커 비용이 사실상 소멸.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 17: Distribution ═══════ -->
+<div class="slide layout-content" data-title="유통·접근성 평가">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 04 – 유통 실태</div>
+      <h3>유통 플랫폼 현황 및 법·제도적 맹점</h3>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="case-card danger">
+          <h4>🛒 유통 플랫폼별 현황</h4>
+          <p><strong>국내 오픈마켓:</strong> "안경 몰카" 등 직관적 키워드는 차단되나, "증거수집용 액션캠", "바디캠", "DIY 카메라 모듈" 등으로 교묘히 우회하여 여전히 구매 가능<br><br>
+          <strong>해외 직구(AliExpress 등):</strong> "Secret Service Earpiece", "Covert Surveillance Kit" 등 위장 카테고리로 수백 종 무제한 판매<br><br>
+          <strong>국내 스파이샵:</strong> 용산·을지로 등에서 "합법적 증거 수집용" 명목으로 공공연히 판매</p>
+        </div>
+      </div>
+      <div>
+        <div class="case-card danger">
+          <h4>⚖️ 법·제도적 맹점 3가지</h4>
+          <p><strong>① 전파법 면제 조항 악용:</strong> 개인 자가사용 목적 1대는 KC 적합성평가 면제 → 불법 무선 장비 세관 무사통과<br><br>
+          <strong>② 목록통관 허점:</strong> 150달러 이하 자가소비 물품은 목록통관 대상. 모듈형 분할 반입 시 적발 거의 불가능<br><br>
+          <strong>③ 변형카메라 관리법 입법 공백:</strong> 발의된 법안이 임기 만료로 폐기·계류 반복. <strong>현재 위장형 카메라 소지·수입·판매를 원천 금지하는 법적 근거 부재</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 18: Section 5 Intro ═══════ -->
+<div class="slide layout-section" data-title="제5장 종합 분석">
+  <div class="slide-content">
+    <div class="section-num">Chapter 05</div>
+    <h2>종합 분석 및 시사점</h2>
+    <p class="section-desc">치팅 기술의 세대별 진화, 처벌의 형사범죄화 추세, 구조적 난제와 향후 대응 방향을 제시합니다.</p>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 19: Evolution ═══════ -->
+<div class="slide layout-dark" data-title="세대별 진화">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 05</div>
+      <h3>치팅 기술의 세대별 진화</h3>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <h5>1세대 — 하드웨어 원시형 (2016~)</h5>
+        <p>안경테에 조잡한 유선 카메라를 심고 외부 브로커에게 <strong>물리적으로 전달</strong>하던 방식. 대리 응시생이 필요하고 다수의 공모자가 관여해야 하는 한계.</p>
+      </div>
+      <div class="tl-item">
+        <h5>2세대 — 무선 송수신형 (2020~)</h5>
+        <p>블루투스/Wi-Fi와 초소형 이어폰을 연동해 외부 조력자에게 <strong>실시간 화면을 송출</strong>하고 정답을 듣는 방식. 여전히 외부 '사람' 풀이 전문가가 필요.</p>
+      </div>
+      <div class="tl-item">
+        <h5>3세대 — AI 완전 자율형 (2024~)</h5>
+        <p>외부 인적 조력자 없이, <strong>스마트 안경 카메라 → 클라우드 LLM(GPT-4o) → AR 렌즈 HUD 또는 지향성 오디오</strong>로 이어지는 완전 자율 실시간 치팅 체계. <strong>1인 완결형 첨단 부정행위.</strong></p>
+      </div>
+    </div>
+    <div class="stats-row" style="margin-top:28px">
+      <div class="stat-box"><div class="stat-val">$15</div><div class="stat-label">최저가 스파이 안경 (알리)</div></div>
+      <div class="stat-box"><div class="stat-val">10초</div><div class="stat-label">I-XRAY 신원 파악 소요시간</div></div>
+      <div class="stat-box"><div class="stat-val">10년</div><div class="stat-label">인도 최대 징역형</div></div>
+      <div class="stat-box"><div class="stat-val">31명</div><div class="stat-label">미 마피아 도박 기소 인원</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 20: Challenges + Recommendations ═══════ -->
+<div class="slide layout-content" data-title="구조적 난제·대응 방향">
+  <div class="slide-content">
+    <div class="slide-header">
+      <div class="chapter">Chapter 05</div>
+      <h3>구조적 난제 및 향후 대응 방향</h3>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="highlight-box">
+          <h5>⚠️ 구조적 난제</h5>
+          <ul class="bullet-list" style="margin-top:10px">
+            <li><strong>시력 교정권 vs 보안의 충돌:</strong> 스마트 안경이 일반 뿔테와 구분 불가능하게 경량화. 안경을 무조건 벗게 하기 어려운 인권·편의적 딜레마</li>
+            <li><strong>안전장치 무력화의 만연:</strong> 촬영 LED 무력화 스티커·회로 개조 키트가 온라인 암시장에서 활발 유통. 자율 규제의 한계 봉착</li>
+            <li><strong>단속 기술의 한계:</strong> 자석 이어폰은 RF 방출 미미, 금속탐지기·육안 식별 곤란. 전파 차단기(Jammer)는 전파법 및 통신권 침해 문제로 제한적</li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="highlight-box blue">
+          <h5>💡 향후 대응 방향</h5>
+          <ul class="bullet-list" style="margin-top:10px">
+            <li><strong>시험장:</strong> 초소형 광학 렌즈 반사 탐지기, 금속 탐지기, 근거리 블루투스/Wi-Fi RF 스캐너 도입 필수</li>
+            <li><strong>평가 혁신:</strong> 대면 구술평가, 과정 중심 평가, 차폐형 아날로그 지필 시험으로의 회귀</li>
+            <li><strong>법제도:</strong> 변형카메라 제조·수입·판매 등록제(이력관리제) 입법, 해외직구 장비 통관 단계 전수 검사 지정</li>
+            <li><strong>하드웨어 규제:</strong> 변조 방지 LED 의무화, 보호구역 내 반입 금지 규정 강화</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SLIDE 21: Closing ═══════ -->
+<div class="slide layout-title" data-title="마무리">
+  <div class="slide-content">
+    <h1 style="font-size:2.6rem">감사합니다</h1>
+    <p class="subtitle" style="max-width:700px;margin:0 auto">AI 안경 부정활용 실태 및 해외 대응사례 종합 보고서<br><br>
+    <span style="font-size:0.9rem;opacity:0.5">본 보고서는 2026년 11월 16일 기준 공개 자료를 바탕으로 작성되었습니다.</span></p>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ─── Navigation Bar ─── -->
+<div id="nav-bar">
+  <button id="btn-prev" onclick="go(-1)">◀ 이전</button>
+  <button class="fs-btn" onclick="toggleOverview()">☰ 슬라이드 목록</button>
+  <span class="page-info"><span id="cur">1</span> / <span id="tot"></span></span>
+  <button class="fs-btn" onclick="toggleFullscreen()">⛶ 전체 화면</button>
+  <button id="btn-next" onclick="go(1)">다음 ▶</button>
+</div>
+
+<!-- ─── Overview Panel ─── -->
+<div id="overview"></div>
+
+<script>
+const slides = [...document.querySelectorAll('.slide')];
+const total = slides.length;
+let current = 0;
+
+document.getElementById('tot').textContent = total;
+
+function render() {
+  slides.forEach((s, i) => {
+    s.classList.remove('active', 'prev');
+    if (i === current) s.classList.add('active');
+    else if (i < current) s.classList.add('prev');
+  });
+  document.getElementById('cur').textContent = current + 1;
+  document.getElementById('btn-prev').disabled = current === 0;
+  document.getElementById('btn-next').disabled = current === total - 1;
+  document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  // scroll to top when changing slide
+  slides[current].scrollTop = 0;
+}
+
+function go(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= total) return;
+  current = next;
+  render();
+  closeOverview();
+}
+
+function goTo(i) {
+  current = i;
+  render();
+  closeOverview();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+  if (document.getElementById('overview').classList.contains('show')) {
+    if (e.key === 'Escape') closeOverview();
+    return;
+  }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); go(1); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); go(-1); }
+  else if (e.key === 'Home') { current = 0; render(); }
+  else if (e.key === 'End') { current = total - 1; render(); }
+  else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+  else if (e.key === 'Escape') { if (document.fullscreenElement) document.exitFullscreen(); }
+  else if (e.key === 'o' || e.key === 'O') toggleOverview();
+});
+
+// Touch swipe
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+});
+
+// Fullscreen
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+// Overview
+function toggleOverview() {
+  const ov = document.getElementById('overview');
+  if (ov.classList.contains('show')) { closeOverview(); return; }
+  ov.innerHTML = '';
+  slides.forEach((s, i) => {
+    const t = document.createElement('div');
+    t.className = 'overview-thumb' + (i === current ? ' current' : '');
+    t.textContent = (i + 1) + '. ' + (s.dataset.title || '');
+    t.onclick = () => goTo(i);
+    ov.appendChild(t);
+  });
+  ov.classList.add('show');
+}
+function closeOverview() { document.getElementById('overview').classList.remove('show'); }
+
+render();
+</script>
+</body>
+</html>
